@@ -1,199 +1,261 @@
-
-import { useMemo, useState } from 'react'
 import './App.css'
 
 function App() {
-  const [transactions, setTransactions] = useState([
-    { id: 1, name: 'Salary', amount: 1, type: 'income' },
-    { id: 2, name: 'Groceries', amount: 1850, type: 'expense' },
-    { id: 3, name: 'Internet', amount: 1299, type: 'expense' },
-  ])
+  const categories = [
+    {
+      id: 1,
+      name: 'Desktop',
+      budget: 61083416,
+      expense: 56432600,
+    },
+    {
+      id: 2,
+      name: 'Monitor',
+      budget: 8821573,
+      expense: 1527750,
+    },
+    {
+      id: 3,
+      name: 'Laptop',
+      budget: 15333429,
+      expense: 2775000,
+    },
+    {
+      id: 4,
+      name: 'Headset',
+      budget: 2000000,
+      expense: 1274120,
+    },
+  ]
 
-  const [name, setName] = useState('')
-  const [amount, setAmount] = useState('')
-  const [type, setType] = useState('expense')
+  const transactions = [
+    {
+      code: 'EXP-001',
+      group: 'IT Equipment',
+      description: 'Desktop',
+      date: '09/01/2026',
+      status: 'Approved',
+      amount: 56432600,
+    },
+    {
+      code: 'EXP-002',
+      group: 'IT Equipment',
+      description: 'Monitor',
+      date: '09/03/2026',
+      status: 'Approved',
+      amount: 1527750,
+    },
+    {
+      code: 'EXP-003',
+      group: 'IT Equipment',
+      description: 'Laptop',
+      date: '09/05/2026',
+      status: 'Pending',
+      amount: 2775000,
+    },
+  ]
 
-  const income = useMemo(
-    () =>
-      transactions
-        .filter((transaction) => transaction.type === 'income')
-        .reduce((total, transaction) => total + transaction.amount, 0),
-    [transactions],
-  )
-
-  const expenses = useMemo(
-    () =>
-      transactions
-        .filter((transaction) => transaction.type === 'expense')
-        .reduce((total, transaction) => total + transaction.amount, 0),
-    [transactions],
-  )
-
-  const balance = income - expenses
-
-  const addTransaction = (event) => {
-    event.preventDefault()
-
-    if (!name.trim() || !amount || Number(amount) <= 0) return
-
-    setTransactions((current) => [
-      ...current,
-      {
-        id: Date.now(),
-        name: name.trim(),
-        amount: Number(amount),
-        type,
-      },
-    ])
-
-    setName('')
-    setAmount('')
+  const formatMoney = (amount) => {
+    return new Intl.NumberFormat('en-PH', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(amount)
   }
 
-  const deleteTransaction = (id) => {
-    setTransactions((current) =>
-      current.filter((transaction) => transaction.id !== id),
-    )
-  }
+  const totalBudget = categories.reduce(
+    (total, category) => total + category.budget,
+    0
+  )
 
-  const formatCurrency = (value) =>
-    new Intl.NumberFormat('en-PH', {
-      style: 'currency',
-      currency: 'PHP',
-      maximumFractionDigits: 0,
-    }).format(value)
+  const totalExpense = categories.reduce(
+    (total, category) => total + category.expense,
+    0
+  )
+
+  const remaining = totalBudget - totalExpense
 
   return (
-    <main className="app">
-      <div className="tracker">
-        <header className="header">
+    <div className="app">
+
+      {/* Header */}
+      <header className="topbar">
+        <div>
+          <span className="label">FINANCE</span>
+          <h1>Budget Tracker</h1>
+          <p>Annual budget overview · 2026</p>
+        </div>
+
+        <button className="year-button">
+          2026
+        </button>
+      </header>
+
+
+      {/* Categories */}
+      <section className="section">
+
+        <div className="section-header">
           <div>
-            <p className="eyebrow">PERSONAL FINANCE</p>
-            <h1>Budget Tracker</h1>
+            <h2>Budget Categories</h2>
+            <p>Track your allocated and spent budget.</p>
           </div>
+        </div>
 
-          <span className="month">September 2026</span>
-        </header>
 
-        <section className="balance-card">
-          <div>
-            <p>Current balance</p>
-            <h2>{formatCurrency(balance)}</h2>
-          </div>
+        <div className="category-grid">
 
-          <div className="balance-mark">₱</div>
-        </section>
+          {categories.map((category) => {
+            const remaining =
+              category.budget - category.expense
 
-        <section className="summary">
-          <div>
-            <span className="summary-label">Income</span>
-            <strong className="income">
-              {formatCurrency(income)}
-            </strong>
-          </div>
+            const percentage =
+              (category.expense / category.budget) * 100
 
-          <div>
-            <span className="summary-label">Expenses</span>
-            <strong className="expense">
-              {formatCurrency(expenses)}
-            </strong>
-          </div>
-        </section>
+            return (
+              <div className="category-card" key={category.id}>
 
-        <section className="add-section">
-          <div className="section-heading">
-            <h3>Add transaction</h3>
-          </div>
-
-          <form onSubmit={addTransaction} className="form">
-            <input
-              type="text"
-              placeholder="Description"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-            />
-
-            <input
-              type="number"
-              placeholder="Amount"
-              min="0"
-              step="1"
-              value={amount}
-              onChange={(event) => setAmount(event.target.value)}
-            />
-
-            <select
-              value={type}
-              onChange={(event) => setType(event.target.value)}
-            >
-              <option value="expense">Expense</option>
-              <option value="income">Income</option>
-            </select>
-
-            <button type="submit">Add</button>
-          </form>
-        </section>
-
-        <section className="transactions">
-          <div className="section-heading">
-            <h3>Transactions</h3>
-            <span>{transactions.length} items</span>
-          </div>
-
-          {transactions.length === 0 ? (
-            <div className="empty">
-              No transactions yet.
-            </div>
-          ) : (
-            <div className="transaction-list">
-              {transactions.map((transaction) => (
-                <div
-                  className="transaction"
-                  key={transaction.id}
-                >
-                  <div className="transaction-icon">
-                    {transaction.type === 'income' ? '+' : '−'}
+                <div className="category-top">
+                  <div className="category-icon">
+                    {category.name.charAt(0)}
                   </div>
 
-                  <div className="transaction-info">
-                    <strong>{transaction.name}</strong>
-                    <span>
-                      {transaction.type === 'income'
-                        ? 'Income'
-                        : 'Expense'}
-                    </span>
+                  <div>
+                    <h3>{category.name}</h3>
+                    <span>Budget category</span>
                   </div>
-
-                  <strong
-                    className={
-                      transaction.type === 'income'
-                        ? 'amount income'
-                        : 'amount expense'
-                    }
-                  >
-                    {transaction.type === 'income' ? '+' : '−'}
-                    {formatCurrency(transaction.amount)}
-                  </strong>
-
-                  <button
-                    type="button"
-                    className="delete"
-                    aria-label={`Delete ${transaction.name}`}
-                    onClick={() =>
-                      deleteTransaction(transaction.id)
-                    }
-                  >
-                    ×
-                  </button>
                 </div>
+
+
+                <div className="category-amount">
+                  <span>Remaining</span>
+
+                  <strong>
+                    ₱{formatMoney(remaining)}
+                  </strong>
+                </div>
+
+
+                <div className="category-progress">
+                  <div
+                    style={{
+                      width: `${Math.min(
+                        percentage,
+                        100
+                      )}%`,
+                    }}
+                  ></div>
+                </div>
+
+
+                <div className="category-details">
+
+                  <div>
+                    <span>Budget</span>
+                    <strong>
+                      ₱{formatMoney(category.budget)}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>Expense</span>
+                    <strong className="expense-text">
+                      ₱{formatMoney(category.expense)}
+                    </strong>
+                  </div>
+
+                </div>
+
+              </div>
+            )
+          })}
+
+        </div>
+
+      </section>
+
+
+      {/* Transactions */}
+      <section className="section">
+
+        <div className="section-header">
+          <div>
+            <h2>Recent Expenses</h2>
+            <p>Latest recorded budget transactions.</p>
+          </div>
+
+          <button className="view-button">
+            View all
+          </button>
+        </div>
+
+
+        <div className="table-card">
+
+          <table>
+
+            <thead>
+              <tr>
+                <th>Item Code</th>
+                <th>Expense Group</th>
+                <th>Description</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th className="amount-column">
+                  Amount
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              {transactions.map((transaction) => (
+                <tr key={transaction.code}>
+
+                  <td className="code">
+                    {transaction.code}
+                  </td>
+
+                  <td>
+                    {transaction.group}
+                  </td>
+
+                  <td>
+                    {transaction.description}
+                  </td>
+
+                  <td>
+                    {transaction.date}
+                  </td>
+
+                  <td>
+                    <span
+                      className={
+                        transaction.status === 'Approved'
+                          ? 'status approved'
+                          : 'status pending'
+                      }
+                    >
+                      {transaction.status}
+                    </span>
+                  </td>
+
+                  <td className="amount-column">
+                    ₱{formatMoney(transaction.amount)}
+                  </td>
+
+                </tr>
               ))}
-            </div>
-          )}
-        </section>
-      </div>
-    </main>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </section>
+
+    </div>
   )
 }
 
 export default App
-
